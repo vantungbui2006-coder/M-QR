@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Order — Menu</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">☕ Menu</div>
+    <div style="display:flex; gap:8px; align-items:center;">
+      <span class="points"></span>
+      <span class="table-tag"></span>
+    </div>
+  </div>
+
+  <div class="wrap" style="padding-bottom:8px;">
+    <div class="cat-row" id="cat-row"></div>
+    <div id="product-list"></div>
+  </div>
+
+  <div class="bottombar">
+    <div class="inner">
+      <div class="cart-info">
+        <div class="count"><span class="js-cart-count">0</span> món trong giỏ</div>
+        <div class="amount js-cart-amount">0₫</div>
+      </div>
+      <a href="cart.html" class="btn btn-primary" style="text-decoration:none;">Xem giỏ hàng</a>
+    </div>
+  </div>
+
+<script src="app.js"></script>
+<script>
+  if (!getTable()) { location.href = 'index.html'; }
+  let activeCat = CATEGORIES[0];
+
+  function renderCats() {
+    const row = document.getElementById('cat-row');
+    row.innerHTML = CATEGORIES.map(c =>
+      `<div class="chip ${c === activeCat ? 'active' : ''}" data-cat="${c}">${c}</div>`
+    ).join('');
+    row.querySelectorAll('.chip').forEach(chip => {
+      chip.addEventListener('click', () => { activeCat = chip.dataset.cat; renderCats(); renderProducts(); });
+    });
+  }
+
+  function renderProducts() {
+    const list = document.getElementById('product-list');
+    const items = MENU.filter(p => p.cat === activeCat);
+    list.innerHTML = items.map(p => `
+      <div class="product">
+        <div class="icon">${p.icon}</div>
+        <div class="info">
+          <h3>${p.name}</h3>
+          <div class="desc">${p.desc}</div>
+          <div class="price">${money(p.price)}</div>
+        </div>
+        <button class="add-btn" data-id="${p.id}">+</button>
+      </div>
+    `).join('');
+    list.querySelectorAll('.add-btn').forEach(btn => {
+      btn.addEventListener('click', () => addToCart(btn.dataset.id));
+    });
+  }
+
+  renderCats();
+  renderProducts();
+</script>
+</body>
+</html>

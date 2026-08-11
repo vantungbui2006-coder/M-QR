@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Order — Quét mã QR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+<style>
+  #qr-reader { width: 100%; border-radius: 16px; overflow: hidden; border: 1px solid var(--line); background: #000; }
+  #qr-reader video { border-radius: 16px; }
+  .scan-frame { position: relative; }
+  .scan-frame::after {
+    content: ''; position: absolute; inset: 18%; border: 2px solid var(--sage); border-radius: 18px;
+    pointer-events: none; box-shadow: 0 0 0 2000px rgba(30,21,16,.35);
+  }
+  .status-line { text-align: center; font-size: 13px; color: var(--cream-dim); margin: 14px 0; min-height: 18px; }
+</style>
+</head>
+<body style="padding-bottom:0;">
+  <div class="topbar" style="justify-content:flex-start; gap:14px;">
+    <a href="index.html" style="color:var(--cream); text-decoration:none; font-size:20px;">←</a>
+    <div class="brand" style="font-size:18px;">Quét mã QR bàn</div>
+  </div>
+
+  <div class="wrap" style="padding-top:22px;">
+    <p style="text-align:center; margin-bottom:16px;">Đưa camera vào mã QR dán trên bàn để bắt đầu gọi món</p>
+
+    <div class="scan-frame">
+      <div id="qr-reader"></div>
+    </div>
+    <div class="status-line" id="status-line">Đang mở camera…</div>
+
+    <div style="background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px; margin-top:20px;">
+      <h3 style="font-size:15px; margin-bottom:4px;">Không quét được?</h3>
+      <p style="font-size:13px; margin-bottom:14px;">Nhập mã bàn in bên dưới mã QR (vd: 05)</p>
+      <div style="display:flex; gap:10px;">
+        <input type="text" id="manual-table" placeholder="Mã bàn" style="flex:1; padding:12px 14px; border-radius:10px; border:1px solid var(--line); background:var(--surface-2); color:var(--cream); font-family:var(--font-mono);">
+        <button class="btn btn-primary" id="manual-btn">Vào bàn</button>
+      </div>
+    </div>
+  </div>
+
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script src="app.js"></script>
+<script>
+  const statusLine = document.getElementById('status-line');
+
+  function goNext(tableCode) {
+    setTableFromScan(tableCode);
+    location.href = 'index.html';
+  }
+
+  document.getElementById('manual-btn').addEventListener('click', () => {
+    const v = document.getElementById('manual-table').value.trim();
+    if (!v) { showToast('Nhập mã bàn trước đã'); return; }
+    goNext(v);
+  });
+
+  // Khởi tạo camera quét QR. Lưu ý: camera chỉ hoạt động trên HTTPS hoặc localhost/127.0.0.1.
+  if (typeof Html5Qrcode === 'undefined') {
+    statusLine.textContent = 'Không tải được thư viện quét QR — dùng ô nhập mã bàn bên dưới.';
+  } else {
+    const scanner = new Html5Qrcode('qr-reader');
+    let handled = false;
+
+    scanner.start(
+      { facingMode: 'environment' },
+      { fps: 10, qrbox: { width: 220, height: 220 } },
+      (decodedText) => {
+        if (handled) return;
+        handled = true;
+        statusLine.textContent = 'Đã quét được mã, đang vào bàn…';
+        scanner.stop().finally(() => goNext(decodedText));
+      },
+      () => { /* frame chưa nhận diện được QR — bỏ qua, thử frame kế tiếp */ }
+    ).then(() => {
+      statusLine.textContent = 'Đưa mã QR vào giữa khung hình';
+    }).catch((err) => {
+      statusLine.textContent = 'Không mở được camera (cần cho phép quyền truy cập camera, hoặc trình duyệt cần chạy qua HTTPS/localhost). Dùng ô nhập mã bàn bên dưới.';
+      console.error(err);
+    });
+  }
+</script>
+</body>
+</html>

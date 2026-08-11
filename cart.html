@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Order — Giỏ hàng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="topbar">
+    <a href="menu.html" style="color:var(--cream); text-decoration:none; font-size:20px;">←</a>
+    <div class="brand" style="font-size:18px;">Giỏ hàng</div>
+    <span class="table-tag"></span>
+  </div>
+
+  <div class="wrap">
+    <div id="cart-body"></div>
+    <div id="summary-block" style="margin-top:10px;"></div>
+  </div>
+
+  <div class="bottombar" id="checkout-bar">
+    <div class="inner">
+      <button class="btn btn-primary btn-block" id="place-order-btn">Đặt món</button>
+    </div>
+  </div>
+
+<script src="app.js"></script>
+<script>
+  if (!getTable()) { location.href = 'index.html'; }
+  function render() {
+    const lines = cartLinesWithProduct();
+    const body = document.getElementById('cart-body');
+    const summary = document.getElementById('summary-block');
+    const bar = document.getElementById('checkout-bar');
+
+    if (!lines.length) {
+      body.innerHTML = `
+        <div class="empty-state">
+          <div class="ic">🛒</div>
+          <p>Giỏ hàng đang trống</p>
+          <a href="menu.html" class="btn btn-primary" style="margin-top:14px; text-decoration:none; display:inline-flex;">Xem menu</a>
+        </div>`;
+      summary.innerHTML = '';
+      bar.style.display = 'none';
+      return;
+    }
+    bar.style.display = 'block';
+
+    body.innerHTML = lines.map(l => `
+      <div class="cart-item">
+        <div>
+          <div class="name">${l.product.icon} ${l.product.name}</div>
+          <div class="unit">${money(l.product.price)} / phần</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:12px;">
+          <div class="qty">
+            <button data-id="${l.id}" data-delta="-1">−</button>
+            <span>${l.qty}</span>
+            <button data-id="${l.id}" data-delta="1">+</button>
+          </div>
+          <div class="line-total">${money(l.product.price * l.qty)}</div>
+        </div>
+      </div>
+    `).join('');
+
+    const total = cartTotal();
+    summary.innerHTML = `
+      <div class="summary-row"><span>Tạm tính</span><span>${money(total)}</span></div>
+      <div class="summary-row total"><span>Tổng cộng</span><span class="val">${money(total)}</span></div>
+    `;
+
+    body.querySelectorAll('button[data-delta]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const id = btn.dataset.id;
+        const delta = parseInt(btn.dataset.delta, 10);
+        const line = getCart().find(l => l.id === id);
+        const current = line ? line.qty : 0;
+        setQty(id, current + delta);
+        render();
+      });
+    });
+  }
+
+  document.getElementById('place-order-btn').addEventListener('click', () => {
+    const order = placeOrder();
+    if (!order) { showToast('Giỏ hàng đang trống'); return; }
+    location.href = 'tracking.html';
+  });
+
+  render();
+</script>
+</body>
+</html>

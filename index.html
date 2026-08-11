@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coffee Order — Chào mừng</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body style="padding-bottom:0;">
+  <div class="wrap" style="padding-top:56px;">
+    <div style="text-align:center; margin-bottom:34px;">
+      <div style="font-size:38px; margin-bottom:10px;">☕</div>
+      <h1 style="font-size:28px;">Coffee Order</h1>
+      <p id="table-line">Bạn đang ở <strong id="table-num" style="color:var(--sage);">chưa quét bàn</strong></p>
+    </div>
+
+    <!-- Trạng thái CHƯA có bàn: bắt buộc quét QR trước -->
+    <div id="no-table-block" style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px; text-align:center; display:none;">
+      <div style="font-size:34px; margin-bottom:10px;">📷</div>
+      <h3 style="margin-bottom:4px;">Quét mã QR trên bàn</h3>
+      <p style="font-size:13px; margin-bottom:18px;">Mỗi bàn có 1 mã QR riêng để hệ thống biết gọi món giao đến đâu</p>
+      <a href="scan.html" class="btn btn-primary btn-block" style="text-decoration:none;">Mở camera quét QR</a>
+    </div>
+
+    <!-- Trạng thái ĐÃ có bàn: cho đăng nhập SĐT -->
+    <div id="has-table-block" style="display:none;">
+      <div style="background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:22px;">
+        <h3 style="margin-bottom:4px;">Nhập số điện thoại</h3>
+        <p style="font-size:13px; margin-bottom:18px;">Để lưu lịch sử đơn và tích điểm cho lần sau</p>
+        <div class="field">
+          <label for="phone">Số điện thoại</label>
+          <input type="tel" id="phone" placeholder="09xxxxxxxx" inputmode="numeric">
+        </div>
+        <button class="btn btn-primary btn-block" id="login-btn">Tiếp tục</button>
+        <button class="btn btn-outline btn-block" id="skip-btn" style="margin-top:10px;">Bỏ qua, xem menu luôn</button>
+      </div>
+      <p style="text-align:center; margin-top:14px;">
+        <a href="scan.html" style="color:var(--cream-dim); font-size:13px;">Quét lại mã QR (đổi bàn)</a>
+      </p>
+      <p id="welcome-back" style="text-align:center; margin-top:10px; font-size:13px; display:none;"></p>
+    </div>
+  </div>
+
+<script src="app.js"></script>
+<script>
+  const table = getTable();
+  const noTableBlock = document.getElementById('no-table-block');
+  const hasTableBlock = document.getElementById('has-table-block');
+
+  if (!table) {
+    document.getElementById('table-num').textContent = 'chưa quét bàn';
+    noTableBlock.style.display = 'block';
+  } else {
+    document.getElementById('table-num').textContent = 'Bàn ' + table;
+    hasTableBlock.style.display = 'block';
+
+    const existing = getUser();
+    if (existing) {
+      document.getElementById('phone').value = existing.phone;
+      const w = document.getElementById('welcome-back');
+      w.style.display = 'block';
+      w.innerHTML = `Chào mừng trở lại! Bạn đang có <strong style="color:var(--crema)">${existing.points || 0} điểm</strong>.`;
+    }
+  }
+
+  function isValidPhone(v) { return /^0\d{9}$/.test(v.trim()); }
+
+  document.getElementById('login-btn').addEventListener('click', () => {
+    const phone = document.getElementById('phone').value.trim();
+    if (!isValidPhone(phone)) { showToast('Số điện thoại chưa đúng định dạng'); return; }
+    const prev = getUser();
+    const user = (prev && prev.phone === phone) ? prev : { phone, points: 0 };
+    setUser(user);
+    location.href = 'menu.html';
+  });
+
+  document.getElementById('skip-btn').addEventListener('click', () => {
+    location.href = 'menu.html';
+  });
+</script>
+</body>
+</html>
